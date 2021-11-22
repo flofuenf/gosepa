@@ -75,6 +75,8 @@ func (doc *Document) InitDoc(msgID string, creationDate string, executionDate st
 	doc.PaymentInfoMethod = "TRF" // always TRF
 	doc.PaymentTypeInfo = "SEPA"  // always SEPA
 	doc.PaymentCharge = "SLEV"    // always SLEV
+	doc.GroupheaderTransacNb = 0
+	doc.PaymentInfoTransacNb = 0
 	return nil
 }
 
