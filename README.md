@@ -1,48 +1,52 @@
 # gosepa
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/softinnov/gosepa)](https://goreportcard.com/report/github.com/softinnov/gosepa)
+[![Go Report Card](https://goreportcard.com/badge/github.com/flofuenf/gosepa)](https://goreportcard.com/report/github.com/flofuenf/gosepa)
 
 gosepa is a sepa xml file generator written in Go compatible with pain.002.001.03 schema (Customer Credit Transfer Initiation V03).
+
+Forked from github.com/softinnov/gosepa and added some extra information in the generated XML file.
 
 This generator uses shortcuts to simplify the norm implementation : for example, there is only one id used for several differents references (I never have to deal with multiple references)
 
 ## Install
 
 ```console
-$ go get github.com/softinnov/gosepa/sepa
+$ go get github.com/flofuenf/gosepa/sepa
 ```
 
 ## Usage
 
 ```go
-    package main
+package main
 
-    import (
-        "fmt"
-        "github.com/softinnov/gosepa/sepa"
-        "log"
-    )
+import (
+	"fmt"
+	"log"
 
-    func main() {
+	"github.com/flofuenf/gosepa/sepa"
+)
 
-        doc := &sepa.Document{}
-        err := doc.InitDoc("MSGID", "2017-06-07T14:39:33", "2017-06-09", "Emiter Name", "FR1420041010050500013M02606", "BKAUATWWP")
-        if err != nil {
-            log.Fatal("can't create sepa document : ", err)
-        }
+func main() {
+	doc := &sepa.Document{}
+	if err := doc.InitDoc("MSGID", "2017-06-07T14:39:33", "2017-06-07T14:39:33",
+		"2017-06-11", "Emiter Name", "FR1420041010050500013M02606", "BKAUATWW",
+		"US", "Your Street 120", "76657 Your City, Country"); err != nil {
+		log.Fatal("can't create sepa document : ", err)
+	}
 
-        err = doc.AddTransaction("F201705", 70000, "EUR", "DEF Electronics", "GB29NWBK60161331926819")
-        if err != nil {
-            log.Fatal("can't add transaction in the sepa document : ", err)
-        }
+	if err := doc.AddTransaction("F201705", 70000, "EUR", "DEV Electronics",
+		"GB29NWBK60161331926819", "BFAUAUWA", "Invoice 12345"); err != nil {
+		log.Fatal("can't add transaction in the sepa document : ", err)
+	}
 
-        res, err := doc.PrettySerialize()
-        if err != nil {
-            log.Fatal("can't get the xml doc : ", err)
-        }
+	res, err := doc.PrettySerialize()
+	if err != nil {
+		log.Fatal("can't get the xml doc : ", err)
+	}
 
-        fmt.Println(string(res))
-    }
+	fmt.Println(string(res))
+}
+
 ```
 
 ## Tests
@@ -70,3 +74,4 @@ $ xmllint --noout --schema pain.001.001.03.xsd test.xml
 
 * [sepa xsd](https://www.iso20022.org/message_archive.page)
 * [go xml](https://golang.org/pkg/encoding/xml/)
+* [original repo](https://github.com/softinnov/gosepa)
