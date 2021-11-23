@@ -1,4 +1,5 @@
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd" xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <CstmrCdtTrfInitn>
     <GrpHdr>
       <MsgId>MSGID</MsgId>
@@ -10,8 +11,9 @@
       </InitgPty>
     </GrpHdr>
     <PmtInf>
-      <PmtInfId>MSGID</PmtInfId>
+      <PmtInfId>2017-06-07T14:39:33</PmtInfId>
       <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>true</BtchBookg>
       <NbOfTxs>1</NbOfTxs>
       <CtrlSum>70000</CtrlSum>
       <PmtTpInf>
@@ -19,9 +21,14 @@
           <Cd>SEPA</Cd>
         </SvcLvl>
       </PmtTpInf>
-      <ReqdExctnDt>2017-06-09</ReqdExctnDt>
+      <ReqdExctnDt>2017-06-11</ReqdExctnDt>
       <Dbtr>
         <Nm>Emiter Name</Nm>
+        <PstlAdr>
+          <Ctry>US</Ctry>
+          <AdrLine>Your Street 120</AdrLine>
+          <AdrLine>76657 Your City, Country</AdrLine>
+        </PstlAdr>
       </Dbtr>
       <DbtrAcct>
         <Id>
@@ -42,21 +49,21 @@
         <Amt>
           <InstdAmt Ccy="EUR">70000</InstdAmt>
         </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BIC>BFAUAUWA</BIC>
+          </FinInstnId>
+        </CdtrAgt>
         <Cdtr>
-          <Nm>DEF Electronics</Nm>
+          <Nm>DEV Electronics</Nm>
         </Cdtr>
         <CdtrAcct>
           <Id>
             <IBAN>GB29NWBK60161331926819</IBAN>
           </Id>
         </CdtrAcct>
-        <RgltryRptg>
-          <Dtls>
-            <Cd>150</Cd>
-          </Dtls>
-        </RgltryRptg>
         <RmtInf>
-          <Ustrd>F201705</Ustrd>
+          <Ustrd>Invoice 12345</Ustrd>
         </RmtInf>
       </CdtTrfTxInf>
     </PmtInf>
