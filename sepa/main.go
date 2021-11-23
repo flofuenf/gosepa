@@ -26,7 +26,6 @@ type Document struct {
 	PaymentInfoTransactNo       int           `xml:"CstmrCdtTrfInitn>PmtInf>NbOfTxs"`
 	PaymentInfoCtrlSum          float64       `xml:"CstmrCdtTrfInitn>PmtInf>CtrlSum"`
 	PaymentTypeInfo             string        `xml:"CstmrCdtTrfInitn>PmtInf>PmtTpInf>SvcLvl>Cd"`
-	PaymentType                 string        `xml:"CstmrCdtTrfInitn>PmtInf>PmtTpInf>LclInstrm>Cd"`
 	PaymentExecDate             string        `xml:"CstmrCdtTrfInitn>PmtInf>ReqdExctnDt"`
 	PaymentEmitterName          string        `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>Nm"`
 	PaymentEmitterPostalCountry string        `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>PstlAdr>Ctry"`
@@ -45,7 +44,6 @@ type Transaction struct {
 	TransactCreditorBic  string  `xml:"CdtrAgt>FinInstnId>BIC"`
 	TransactCreditorName string  `xml:"Cdtr>Nm"`
 	TransactCreditorIBAN string  `xml:"CdtrAcct>Id>IBAN"`
-	TransactRegulatory   string  `xml:"RgltryRptg>Dtls>Cd"`
 	TransactMotif        string  `xml:"RmtInf>Ustrd"`
 }
 
@@ -57,7 +55,7 @@ type TAmount struct {
 
 // InitDoc fixes every constant in the document + emitter information
 func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate string, executionDate string,
-	emitterName string, emitterIBAN string, emitterBIC string, countryCode string, addr1 string, addr2 string) error {
+	emitterName string, emitterIBAN string, emitterBIC string, countryCode string, street string, city string) error {
 	if _, err := time.Parse("2006-01-02T15:04:05", creationDate); err != nil {
 		return err
 	}
@@ -74,7 +72,6 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 	doc.PaymentTypeInfo = "SEPA"  // always SEPA
 	doc.PaymentCharge = "SLEV"    // always SLEV
 	doc.PaymentBatch = "true"     //always true??
-	doc.PaymentType = "CORE"      // fixed CORE or B2B
 	doc.GroupHeaderMsgID = msgID
 	doc.PaymentInfoID = paymentInfoID
 	doc.GroupHeaderCreateDate = creationDate
@@ -84,14 +81,15 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 	doc.PaymentEmitterIBAN = emitterIBAN
 	doc.PaymentEmitterBIC = emitterBIC
 	doc.PaymentEmitterPostalCountry = countryCode
-	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, addr1)
-	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, addr2)
+	doc.PaymentEmitterPostalAddress = make([]string, 0)
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, street)
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, city)
 	return nil
 }
 
 // AddTransaction adds a transfer transaction and adjust the transaction number and the sum control
 func (doc *Document) AddTransaction(id string, amount float64, currency string, creditorName string,
-	creditorIBAN string, description string, bic string) error {
+	creditorIBAN string, bic string, description string) error {
 	if !IsValid(creditorIBAN) {
 		return errors.New("invalid creditor IBAN")
 	}
@@ -99,7 +97,6 @@ func (doc *Document) AddTransaction(id string, amount float64, currency string, 
 		return errors.New("amount 2 decimals only")
 	}
 	doc.PaymentTransactions = append(doc.PaymentTransactions, Transaction{
-		TransactRegulatory:   "150", // always 150
 		TransactID:           id,
 		TransactIDe2e:        id,
 		TransactMotif:        description,
