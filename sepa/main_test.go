@@ -105,13 +105,12 @@ func TestGenerateSEPAXML(t *testing.T) {
 	// For each transaction, we check that the cumulus amount and number of transactions remain correct in header and payment block
 	var cumulus = float64(0)
 
-	var nb = 0
 	for count, transact := range TTest {
 		if err := sepaDoc.AddTransaction(transact.id, transact.amount, transact.currency, transact.debitorName, transact.debitorIban, transact.debitorBic, transact.debitorDesc); err != nil {
 			t.Error("Expected AddTransaction return nil", "got", err)
 		}
 		cumulus += transact.amount
-		nb = 1 + count
+		nb := count + 1
 		if sepaDoc.GroupHeaderCtrlSum != cumulus {
 			t.Error("Expected GroupHeaderCtrlSum", cumulus, "got", sepaDoc.GroupHeaderCtrlSum)
 		}
