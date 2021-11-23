@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/flofuenf/gosepa)](https://goreportcard.com/report/github.com/flofuenf/gosepa)
 
-gosepa is a sepa xml file generator written in Go compatible with pain.002.001.03 schema (Customer Credit Transfer Initiation V03).
+gosepa is a sepa xml file generator written in Go compatible with pain.001.001.03 schema (Customer Credit Transfer Initiation V03).
 
 Forked from github.com/softinnov/gosepa and added some extra information in the generated XML file.
 
