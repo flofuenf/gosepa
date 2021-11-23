@@ -6,7 +6,7 @@ gosepa is a sepa xml file generator written in Go compatible with pain.002.001.0
 
 Forked from github.com/softinnov/gosepa and added some extra information in the generated XML file.
 
-This generator uses shortcuts to simplify the norm implementation : for example, there is only one id used for several differents references (I never have to deal with multiple references)
+In contrast to the original package, I'm using differente ID's in the generator. The XML-Output got verified from a official bank service.
 
 ## Install
 
