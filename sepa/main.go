@@ -12,6 +12,7 @@ import (
 // Document is the SEPA format for the document containing all transfers
 type Document struct {
 	XMLName                     xml.Name      `xml:"Document"`
+	XMLXsiLoc                   string        `xml:"xsi:schemaLocation,attr"`
 	XMLNs                       string        `xml:"xmlns,attr"`
 	XMLXsi                      string        `xml:"xmlns:xsi,attr"`
 	GroupHeaderMsgID            string        `xml:"CstmrCdtTrfInitn>GrpHdr>MsgId"`
@@ -19,8 +20,6 @@ type Document struct {
 	GroupHeaderTransactNo       int           `xml:"CstmrCdtTrfInitn>GrpHdr>NbOfTxs"`
 	GroupHeaderCtrlSum          float64       `xml:"CstmrCdtTrfInitn>GrpHdr>CtrlSum"`
 	GroupHeaderEmitterName      string        `xml:"CstmrCdtTrfInitn>GrpHdr>InitgPty>Nm"`
-	GroupHeaderPostalCountry    string        `xml:"CstmrCdtTrfInitn>GrpHdr>InitgPty>PstlAdr>Ctry"`
-	GroupHeaderPostalAddress    []string      `xml:"CstmrCdtTrfInitn>GrpHdr>InitgPty>PstlAdr>AdrLine"`
 	PaymentInfoID               string        `xml:"CstmrCdtTrfInitn>PmtInf>PmtInfId"`
 	PaymentInfoMethod           string        `xml:"CstmrCdtTrfInitn>PmtInf>PmtMtd"`
 	PaymentBatch                string        `xml:"CstmrCdtTrfInitn>PmtInf>BtchBookg"`
@@ -68,6 +67,7 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 	if !IsValid(emitterIBAN) {
 		return errors.New("invalid emitter IBAN")
 	}
+	doc.XMLXsiLoc = "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd"
 	doc.XMLNs = "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
 	doc.XMLXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	doc.PaymentInfoMethod = "TRF" // always TRF (in old version DD???)
@@ -83,11 +83,9 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 	doc.PaymentEmitterName = emitterName
 	doc.PaymentEmitterIBAN = emitterIBAN
 	doc.PaymentEmitterBIC = emitterBIC
-	doc.GroupHeaderPostalCountry = countryCode
 	doc.PaymentEmitterPostalCountry = countryCode
-	doc.GroupHeaderPostalAddress = append(doc.GroupHeaderPostalAddress, addr1)
-	doc.GroupHeaderPostalAddress = append(doc.GroupHeaderPostalAddress, addr2)
-	doc.PaymentEmitterPostalAddress = doc.GroupHeaderPostalAddress
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, addr1)
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, addr2)
 	return nil
 }
 
@@ -134,12 +132,20 @@ func (doc *Document) AddTransaction(id string, amount float64, currency string, 
 
 // Serialize returns the xml document in byte stream
 func (doc *Document) Serialize() ([]byte, error) {
-	return xml.Marshal(doc)
+	res, err := xml.Marshal(doc)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(xml.Header + string(res)), nil
 }
 
 // PrettySerialize returns the indented xml document in byte stream
 func (doc *Document) PrettySerialize() ([]byte, error) {
-	return xml.MarshalIndent(doc, "", "  ")
+	res, err := xml.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(xml.Header + string(res)), nil
 }
 
 // IsValid IBAN
