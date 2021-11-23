@@ -110,18 +110,17 @@ func TestGenerateSEPAXML(t *testing.T) {
 			t.Error("Expected AddTransaction return nil", "got", err)
 		}
 		cumulus += transact.amount
-		nb := count + 1
 		if sepaDoc.GroupHeaderCtrlSum != cumulus {
 			t.Error("Expected GroupHeaderCtrlSum", cumulus, "got", sepaDoc.GroupHeaderCtrlSum)
 		}
 		if sepaDoc.PaymentInfoCtrlSum != cumulus {
 			t.Error("Expected PaymentInfoCtrlSum", cumulus, "got", sepaDoc.PaymentInfoCtrlSum)
 		}
-		if sepaDoc.GroupHeaderTransactNo != nb {
-			t.Error("Expected GroupHeaderTransactNo", nb, "got", sepaDoc.GroupHeaderTransactNo)
+		if sepaDoc.GroupHeaderTransactNo != count+1 {
+			t.Error("Expected GroupHeaderTransactNo", count+1, "got", sepaDoc.GroupHeaderTransactNo)
 		}
-		if sepaDoc.PaymentInfoTransactNo != nb {
-			t.Error("Expected PaymentInfoTransactNo", nb, "got", sepaDoc.PaymentInfoTransactNo)
+		if sepaDoc.PaymentInfoTransactNo != count+1 {
+			t.Error("Expected PaymentInfoTransactNo", count+1, "got", sepaDoc.PaymentInfoTransactNo)
 		}
 	}
 
