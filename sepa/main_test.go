@@ -55,22 +55,22 @@ func TestGenerateSEPAXML(t *testing.T) {
 	}
 
 	// Bad format for execution date, expecting YYYY-MM-JJ
-	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "", "", "", "", "", "","", ""); err == nil {
+	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "", "", "", "", "", "", "", ""); err == nil {
 		t.Error("Expected InitDoc return an error for bad execution date format", "got", err)
 	}
 
 	// Bad IBAN
-	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "2017-05-03", "XX12345678901234567", "", "", "", "","", ""); err == nil {
+	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "2017-05-03", "XX12345678901234567", "", "", "", "", "", ""); err == nil {
 		t.Error("Expected InitDoc return an error for bad IBAN", "got", err)
 	}
 
 	// Good IBAN
-	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "2017-05-03", "FR1420041010050500013M02606", "FR1420041010050500013M02606", "", "", "","", ""); err != nil {
+	if err := sepaDoc.InitDoc("", "2017-05-01", "2017-05-01T22:45:03", "2017-05-03", "FR1420041010050500013M02606", "FR1420041010050500013M02606", "", "", "", "", ""); err != nil {
 		t.Error("Expected InitDoc return nil for good IBAN", "got", err)
 	}
 
 	// Initialize doc test
-	if err := sepaDoc.InitDoc("VIR201705", "2017-05-01T12:00:00", "2017-05-01T22:45:03", "2017-05-03", "Franz Holzapfel GMBH", "FR1420041010050500013M02606", "BKAUATWW", "","DE", "some street", "some city"); err != nil {
+	if err := sepaDoc.InitDoc("VIR201705", "2017-05-01T12:00:00", "2017-05-01T22:45:03", "2017-05-03", "Franz Holzapfel GMBH", "FR1420041010050500013M02606", "BKAUATWW", "", "DE", "some street", "some city"); err != nil {
 		t.Error("Expected InitDoc return nil", "got", err)
 	}
 
