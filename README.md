@@ -30,7 +30,7 @@ func main() {
 	doc := &sepa.Document{}
 	if err := doc.InitDoc("MSGID", "2017-06-07T14:39:33", "2017-06-07T14:39:33",
 		"2017-06-11", "Emiter Name", "FR1420041010050500013M02606", "BKAUATWW",
-		"US", "Your Street 120", "76657 Your City, Country"); err != nil {
+		"emitterID", "US", "Your Street 120", "76657 Your City, Country"); err != nil {
 		log.Fatal("can't create sepa document : ", err)
 	}
 
@@ -46,7 +46,6 @@ func main() {
 
 	fmt.Println(string(res))
 }
-
 ```
 
 ## Tests

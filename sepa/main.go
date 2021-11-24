@@ -30,6 +30,7 @@ type Document struct {
 	PaymentEmitterName          string        `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>Nm"`
 	PaymentEmitterPostalCountry string        `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>PstlAdr>Ctry"`
 	PaymentEmitterPostalAddress []string      `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>PstlAdr>AdrLine"`
+	PaymentEmitterDebitorID     string        `xml:"CstmrCdtTrfInitn>PmtInf>Dbtr>Id>PrvtId>Othr>Id"`
 	PaymentEmitterIBAN          string        `xml:"CstmrCdtTrfInitn>PmtInf>DbtrAcct>Id>IBAN"`
 	PaymentEmitterBIC           string        `xml:"CstmrCdtTrfInitn>PmtInf>DbtrAgt>FinInstnId>BIC"`
 	PaymentCharge               string        `xml:"CstmrCdtTrfInitn>PmtInf>ChrgBr"`
@@ -55,7 +56,8 @@ type TAmount struct {
 
 // InitDoc fixes every constant in the document + emitter information
 func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate string, executionDate string,
-	emitterName string, emitterIBAN string, emitterBIC string, countryCode string, street string, city string) error {
+	emitterName string, emitterIBAN string, emitterBIC string, emitterID string, countryCode string, street string, city string) error {
+	emitterIBAN = strings.Join(strings.Fields(emitterIBAN), "")
 	if _, err := time.Parse("2006-01-02T15:04:05", creationDate); err != nil {
 		return err
 	}
@@ -72,6 +74,7 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 	doc.PaymentTypeInfo = "SEPA"  // always SEPA
 	doc.PaymentCharge = "SLEV"    // always SLEV
 	doc.PaymentBatch = "true"     //always true??
+	doc.PaymentEmitterDebitorID = emitterID
 	doc.GroupHeaderMsgID = msgID
 	doc.PaymentInfoID = paymentInfoID
 	doc.GroupHeaderCreateDate = creationDate
@@ -90,6 +93,7 @@ func (doc *Document) InitDoc(msgID string, paymentInfoID string, creationDate st
 // AddTransaction adds a transfer transaction and adjust the transaction number and the sum control
 func (doc *Document) AddTransaction(id string, amount float64, currency string, creditorName string,
 	creditorIBAN string, bic string, description string) error {
+	creditorIBAN = strings.Join(strings.Fields(creditorIBAN), "")
 	if !IsValid(creditorIBAN) {
 		return errors.New("invalid creditor IBAN")
 	}
