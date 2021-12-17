@@ -10,7 +10,7 @@ import (
 
 // CreditTransfer is the SEPA format for the document containing all credit transfers
 type CreditTransfer struct {
-	XMLName                     xml.Name            `xml:"document"`
+	XMLName                     xml.Name            `xml:"Document"`
 	XMLXsiLoc                   string              `xml:"xsi:schemaLocation,attr"`
 	XMLNs                       string              `xml:"xmlns,attr"`
 	XMLXsi                      string              `xml:"xmlns:xsi,attr"`
