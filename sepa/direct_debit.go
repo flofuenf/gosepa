@@ -3,10 +3,38 @@ package sepa
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/flofuenf/gosepa/lib"
+	"github.com/flofuenf/gosepa/model"
+	"github.com/shopspring/decimal"
 	"strings"
 	"time"
 )
+
+// DirectDebitInput test me
+type DirectDebitInput struct {
+	MsgID         string
+	PaymentInfoID string
+	CreationDate  string
+	ExecutionDate string
+	EmitterName   string
+	EmitterIBAN   model.IBAN
+	EmitterBIC    string
+	EmitterID     string
+	CountryCode   string
+	Street        string
+	City          string
+}
+
+type AddDebitTransactionInput struct {
+	ID                   string
+	Amount               decimal.Decimal
+	Currency             string
+	CreditorName         string
+	CreditorIBAN         model.IBAN
+	BIC                  string
+	Description          string
+	MandantId            string // additional
+	MandantSignatureDate string // additional
+}
 
 // DirectDebit is the SEPA format for the document containing all direct debits
 type DirectDebit struct {
@@ -17,13 +45,13 @@ type DirectDebit struct {
 	GroupHeaderMsgID            string             `xml:"CstmrDrctDbtInitn>GrpHdr>MsgId"`
 	GroupHeaderCreateDate       string             `xml:"CstmrDrctDbtInitn>GrpHdr>CreDtTm"`
 	GroupHeaderTransactNo       int                `xml:"CstmrDrctDbtInitn>GrpHdr>NbOfTxs"`
-	GroupHeaderCtrlSum          float64            `xml:"CstmrDrctDbtInitn>GrpHdr>CtrlSum"`
+	GroupHeaderCtrlSum          decimal.Decimal    `xml:"CstmrDrctDbtInitn>GrpHdr>CtrlSum"`
 	GroupHeaderEmitterName      string             `xml:"CstmrDrctDbtInitn>GrpHdr>InitgPty>Nm"`
 	PaymentInfoID               string             `xml:"CstmrDrctDbtInitn>PmtInf>PmtInfId"`
 	PaymentInfoMethod           string             `xml:"CstmrDrctDbtInitn>PmtInf>PmtMtd"`
 	PaymentBatch                string             `xml:"CstmrDrctDbtInitn>PmtInf>BtchBookg"`
 	PaymentInfoTransactNo       int                `xml:"CstmrDrctDbtInitn>PmtInf>NbOfTxs"`
-	PaymentInfoCtrlSum          float64            `xml:"CstmrDrctDbtInitn>PmtInf>CtrlSum"`
+	PaymentInfoCtrlSum          decimal.Decimal    `xml:"CstmrDrctDbtInitn>PmtInf>CtrlSum"`
 	PaymentTypeInfo             string             `xml:"CstmrDrctDbtInitn>PmtInf>PmtTpInf>SvcLvl>Cd"`
 	PaymentType                 string             `xml:"CstmrDrctDbtInitn>PmtInf>PmtTpInf>LclInstrm>Cd"`
 	PaymentTypeSequence         string             `xml:"CstmrDrctDbtInitn>PmtInf>PmtTpInf>SeqTp"`
@@ -40,28 +68,27 @@ type DirectDebit struct {
 
 // DebitTransaction is the debit transfer SEPA format
 type DebitTransaction struct {
-	TransactIDe2e                string  `xml:"PmtId>EndToEndId"`
-	TransactAmount               TAmount `xml:"InstdAmt"`
-	TransactMandantId            string  `xml:"DrctDbtTx>MndtRltdInf>MndtId"`
-	TransactMandantSignatureDate string  `xml:"DrctDbtTx>MndtRltdInf>DtOfSgntr"`
-	TransactCreditorBic          string  `xml:"DbtrAgt>FinInstnId>BIC"`
-	TransactCreditorName         string  `xml:"Dbtr>Nm"`
-	TransactCreditorIBAN         string  `xml:"DbtrAcct>Id>IBAN"`
-	TransactMotif                string  `xml:"RmtInf>Ustrd"`
+	TransactIDe2e                string       `xml:"PmtId>EndToEndId"`
+	TransactAmount               model.Amount `xml:"InstdAmt"`
+	TransactMandantId            string       `xml:"DrctDbtTx>MndtRltdInf>MndtId"`
+	TransactMandantSignatureDate string       `xml:"DrctDbtTx>MndtRltdInf>DtOfSgntr"`
+	TransactCreditorBic          string       `xml:"DbtrAgt>FinInstnId>BIC"`
+	TransactCreditorName         string       `xml:"Dbtr>Nm"`
+	TransactCreditorIBAN         string       `xml:"DbtrAcct>Id>IBAN"`
+	TransactMotif                string       `xml:"RmtInf>Ustrd"`
 }
 
-// InitDoc fixes every constant in the document + emitter information
-func (doc *DirectDebit) InitDoc(msgID string, paymentInfoID string, creationDate string, executionDate string,
-	emitterName string, emitterIBAN string, emitterBIC string, emitterID string, countryCode string, street string, city string) error {
-	emitterIBAN = strings.Join(strings.Fields(emitterIBAN), "")
-	if _, err := time.Parse("2006-01-02T15:04:05", creationDate); err != nil {
-		return err
+func NewDirectDebit(in DirectDebitInput) (*DirectDebit, error) {
+	doc := &DirectDebit{}
+	in.EmitterIBAN = model.IBAN(strings.Join(strings.Fields(string(in.EmitterIBAN)), ""))
+	if _, err := time.Parse("2006-01-02T15:04:05", in.CreationDate); err != nil {
+		return nil, err
 	}
-	if _, err := time.Parse("2006-01-02", executionDate); err != nil {
-		return err
+	if _, err := time.Parse("2006-01-02", in.ExecutionDate); err != nil {
+		return nil, err
 	}
-	if !lib.IsValid(emitterIBAN) {
-		return errors.New("invalid emitter IBAN")
+	if !in.EmitterIBAN.IsValid() {
+		return nil, errors.New("invalid emitter IBAN")
 	}
 
 	// general xml stuff
@@ -70,67 +97,58 @@ func (doc *DirectDebit) InitDoc(msgID string, paymentInfoID string, creationDate
 	doc.XMLXsi = "http://www.w3.org/2001/XMLSchema-instance"
 
 	// group header
-	doc.GroupHeaderMsgID = msgID
-	doc.GroupHeaderCreateDate = creationDate
-	doc.GroupHeaderEmitterName = emitterName
+	doc.GroupHeaderMsgID = in.MsgID
+	doc.GroupHeaderCreateDate = in.CreationDate
+	doc.GroupHeaderEmitterName = in.EmitterName
 
 	// general document information
-	doc.PaymentInfoID = paymentInfoID
+	doc.PaymentInfoID = in.PaymentInfoID
 	doc.PaymentInfoMethod = "DD"
 	doc.PaymentBatch = "true"    //always true??
 	doc.PaymentTypeInfo = "SEPA" // always SEPA
 	doc.PaymentType = "CORE"
 	doc.PaymentTypeSequence = "FRST"
-	doc.PaymentExecDate = executionDate
-	doc.PaymentEmitterName = emitterName
-	doc.PaymentEmitterPostalCountry = countryCode
+	doc.PaymentExecDate = in.ExecutionDate
+	doc.PaymentEmitterName = in.EmitterName
+	doc.PaymentEmitterPostalCountry = in.CountryCode
 	doc.PaymentEmitterPostalAddress = make([]string, 0)
-	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, street)
-	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, city)
-	doc.PaymentEmitterIBAN = emitterIBAN
-	doc.PaymentEmitterBIC = emitterBIC
-	doc.PaymentEmitterID = emitterID
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, in.Street)
+	doc.PaymentEmitterPostalAddress = append(doc.PaymentEmitterPostalAddress, in.City)
+	doc.PaymentEmitterIBAN = string(in.EmitterIBAN)
+	doc.PaymentEmitterBIC = in.EmitterBIC
+	doc.PaymentEmitterID = in.EmitterID
 	doc.PaymentEmitterProprietary = "SEPA"
 
-	return nil
+	return doc, nil
 }
 
 // AddTransaction adds a transfer transaction and adjust the transaction number and the sum control
-func (doc *DirectDebit) AddTransaction(id string, amount float64, currency string, creditorName string,
-	creditorIBAN string, bic string, description string, mandantId string, mandantSignatureDate string) error {
-	creditorIBAN = strings.Join(strings.Fields(creditorIBAN), "")
-	if !lib.IsValid(creditorIBAN) {
+func (doc *DirectDebit) AddTransaction(in AddDebitTransactionInput) error {
+	in.CreditorIBAN = model.IBAN(strings.Join(strings.Fields(string(in.CreditorIBAN)), ""))
+	if !in.CreditorIBAN.IsValid() {
 		return errors.New("invalid creditor IBAN")
 	}
-	if lib.DecimalsNumber(amount) > 2 {
-		return errors.New("amount 2 decimals only")
-	}
 	doc.PaymentTransactions = append(doc.PaymentTransactions, DebitTransaction{
-		TransactIDe2e:                id,
-		TransactAmount:               TAmount{Amount: amount, Currency: currency},
-		TransactMandantId:            mandantId,
-		TransactMandantSignatureDate: mandantSignatureDate,
-		TransactCreditorBic:          bic,
-		TransactCreditorName:         creditorName,
-		TransactCreditorIBAN:         creditorIBAN,
-		TransactMotif:                description,
+		TransactIDe2e: in.ID,
+		TransactAmount: model.Amount{
+			Amount:   in.Amount,
+			Currency: in.Currency,
+		},
+		TransactMandantId:            in.MandantId,
+		TransactMandantSignatureDate: in.MandantSignatureDate,
+		TransactCreditorBic:          in.BIC,
+		TransactCreditorName:         in.CreditorName,
+		TransactCreditorIBAN:         string(in.CreditorIBAN),
+		TransactMotif:                in.Description,
 	})
 	doc.GroupHeaderTransactNo++
 	doc.PaymentInfoTransactNo++
 
-	amountCents, err := lib.ToCents(amount)
-	if err != nil {
-		return errors.New("in AddTransaction can't convert amount in cents")
-	}
-	cumulusCents, err := lib.ToCents(doc.GroupHeaderCtrlSum)
-	if err != nil {
-		return errors.New("in AddTransaction can't convert control sum in cents")
-	}
+	amountCents := in.Amount.Mul(decimal.NewFromInt(100)).Truncate(2)
 
-	cumulusEuro, err := lib.ToEuro(cumulusCents + amountCents)
-	if err != nil {
-		return errors.New("in AddTransaction can't convert cumulus in euro")
-	}
+	cumulusCents := doc.GroupHeaderCtrlSum.Mul(decimal.NewFromInt(100)).Truncate(2)
+
+	cumulusEuro := cumulusCents.Add(amountCents).Div(decimal.NewFromInt(100))
 
 	doc.GroupHeaderCtrlSum = cumulusEuro
 	doc.PaymentInfoCtrlSum = cumulusEuro
@@ -139,10 +157,18 @@ func (doc *DirectDebit) AddTransaction(id string, amount float64, currency strin
 
 // Serialize returns the xml document in byte stream
 func (doc *DirectDebit) Serialize() ([]byte, error) {
-	return lib.Serialize(doc)
+	res, err := xml.Marshal(doc)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(xml.Header + string(res)), nil
 }
 
 // PrettySerialize returns the indented xml document in byte stream
 func (doc *DirectDebit) PrettySerialize() ([]byte, error) {
-	return lib.PrettySerialize(doc)
+	res, err := xml.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(xml.Header + string(res)), nil
 }

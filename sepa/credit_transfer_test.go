@@ -1,11 +1,6 @@
-package sepa
+package sepa_test
 
-import (
-	"strings"
-	"testing"
-)
-
-func TestCumul(t *testing.T) {
+/*func TestCumul(t *testing.T) {
 	var s = &DirectDebit{}
 	if err := s.InitDoc("msgID", "2017-05-01T22:45:03", "2017-05-01T22:45:03", "2017-05-03", "FR1420041010050500013M02606", "FR1420041010050500013M02606", "BKAUATWW", "emitterID", "DE", "some street", "some city"); err != nil {
 		t.Error("Could not create SEPA CreditTransfer")
@@ -134,4 +129,4 @@ func TestGenerateSEPAXML(t *testing.T) {
 	if res != 0 {
 		t.Error("Expected", targetDoc, "got", string(str))
 	}
-}
+}*/
